@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Upload Multiple Files to Firebase</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
+<div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <h2 class="text-2xl font-bold text-center text-blue-700 mb-6">Upload Files to Firebase</h2>
+
+    <form id="uploadForm" enctype="multipart/form-data" class="flex flex-col gap-4">
+        <input
+                type="file"
+                name="files"
+                id="fileInput"
+                multiple
+                required
+                class="border border-blue-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+                type="submit"
+                class="bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg transition"
+        >
+            Upload
+        </button>
+    </form>
+
+    <div id="result" class="mt-6 space-y-2"></div>
+</div>
+
+<script>
+    const form = document.getElementById('uploadForm');
+    const result = document.getElementById('result');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const files = document.getElementById('fileInput').files;
+
+        if (!files.length) {
+            result.textContent = 'Please select at least one file.';
+            return;
+        }
+
+        const formData = new FormData();
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files', files[i]);
+        }
+
+        result.innerHTML = `<p class="text-blue-600">Uploading...</p>`;
+
+        try {
+            let res = await fetch('http://localhost:3000/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            res = await res.json();
+            if (res.error === false) {
+                result.innerHTML = `<h3 class="font-semibold text-green-600">✅ Uploaded Files:</h3>`;
+                res.files.forEach(file => {
+                    const link = document.createElement('a');
+                    link.href = file.url;
+                    link.target = "_blank";
+                    link.textContent = `📄 ${file.name}`;
+                    link.className = "block text-blue-500 underline";
+                    result.appendChild(link);
+                });
+            } else {
+                result.textContent = '❌ Upload failed.';
+            }
+        } catch (error) {
+            console.error(error);
+            result.textContent = 'An error occurred.';
+        }
+    });
+</script>
+</body>
+</html>
